@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fund Tracker</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --primary: #3498db;
+            --income: #2ecc71;
+            --expense: #e74c3c;
+            --text: #2c3e50;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 0;
+            font-weight: 600;
+        }
+
+        .balance-card {
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .balance-card h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .balance-amount {
+            font-size: 2.2rem;
+            margin: 10px 0 0 0;
+            font-weight: 700;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        input, select, button {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input[type="text"] {
+            flex: 2;
+            min-width: 130px;
+        }
+
+        input[type="number"] {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        select {
+            background-color: white;
+            cursor: pointer;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .transaction-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10px;
+            border-bottom: 1px solid #eee;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .transaction-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .transaction-desc {
+            font-weight: 500;
+        }
+
+        .transaction-date {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .transaction-amount {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .amt-in { color: var(--income); }
+        .amt-out { color: var(--expense); }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0 5px;
+            width: auto;
+        }
+
+        .delete-btn:hover {
+            color: var(--expense);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #aaa;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Fund Tracker</h1>
+        
+        <div class="balance-card">
+            <h2>Current Balance</h2>
+            <div class="balance-amount" id="balance">₹0.00</div>
+        </div>
+
+        <form id="transaction-form">
+            <div class="form-group">
+                <input type="text" id="description" placeholder="Description (e.g., Salary, Groceries)" required>
+                <input type="number" id="amount" placeholder="Amount" step="0.01" min="0.01" required>
+                <select id="type">
+                    <option value="in">In (Income)</option>
+                    <option value="out">Out (Expense)</option>
+                </select>
+            </div>
+            <button type="submit">Add Transaction</button>
+        </form>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0;">
+
+        <ul class="transaction-list" id="transaction-list">
+            </ul>
+    </div>
+
+    <script>
+        // App State
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+        // DOM Elements
+        const balanceEl = document.getElementById('balance');
+        const listEl = document.getElementById('transaction-list');
+        const form = document.getElementById('transaction-form');
+        const descInput = document.getElementById('description');
+        const amountInput = document.getElementById('amount');
+        const typeInput = document.getElementById('type');
+
+        // Update UI Summary Metrics
+        function updateDOM() {
+            listEl.innerHTML = '';
+
+            if (transactions.length === 0) {
+                listEl.innerHTML = '<li class="empty-state">No transactions yet. Add your first log above!</li>';
+                balanceEl.innerText = '₹0.00';
+                balanceEl.style.color = '#fff';
+                return;
+            }
+
+            let totalBalance = 0;
+
+            transactions.forEach(t => {
+                const isIncome = t.type === 'in';
+                totalBalance += isIncome ? t.amount : -t.amount;
+
+                const li = document.createElement('li');
+                li.className = 'transaction-item';
+                li.innerHTML = `
+                    <div class="transaction-info">
+                        <span class="transaction-desc">${t.description}</span>
+                        <span class="transaction-date">${t.date}</span>
+                    </div>
+                    <div class="transaction-amount ${isIncome ? 'amt-in' : 'amt-out'}">
+                        ${isIncome ? '+' : '-'}${formatCurrency(t.amount)}
+                        <button class="delete-btn" onclick="deleteTransaction('${t.id}')">&times;</button>
+                    </div>
+                `;
+                listEl.appendChild(li);
+            });
+
+            balanceEl.innerText = (totalBalance >= 0 ? '' : '-') + formatCurrency(Math.abs(totalBalance));
+        }
+
+        // Helper: Format number cleanly
+        function formatCurrency(num) {
+            return '₹' + num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+
+        // Action: Add entry
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const transaction = {
+                id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9),
+                description: descInput.value.trim(),
+                amount: parseFloat(amountInput.value),
+                type: typeInput.value,
+                date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            };
+
+            transactions.unshift(transaction); // Add to beginning of array
+            saveAndRefresh();
+            
+            // Reset input values cleanly
+            descInput.value = '';
+            amountInput.value = '';
+            descInput.focus();
+        });
+
+        // Action: Remove entry
+        function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            saveAndRefresh();
+        }
+
+        // Persistence Syncing
+        function saveAndRefresh() {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            updateDOM();
+        }
+
+        // Initial Layout Initialization
+        updateDOM();
+    </script>
+</body>
+</html>
