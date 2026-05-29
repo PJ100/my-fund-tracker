@@ -2,292 +2,332 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fund Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fudget Month Ledger</title>
     <style>
-        :root {
-            --bg-color: #f4f7f6;
-            --card-bg: #ffffff;
-            --primary: #3498db;
-            --income: #2ecc71;
-            --expense: #e74c3c;
-            --text: #2c3e50;
-        }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text);
+            background-color: #f0f3f5;
+            color: #2c3e50;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             justify-content: center;
         }
-
-        .container {
+        .app-card {
             width: 100%;
-            max-width: 480px;
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-
-        h1 {
-            text-align: center;
-            margin-top: 0;
-            font-weight: 600;
-        }
-
-        .balance-card {
-            background: linear-gradient(135deg, #34495e, #2c3e50);
-            color: white;
+            max-width: 420px;
+            background: #ffffff;
             padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+            box-sizing: border-box;
         }
-
-        .balance-card h2 {
-            margin: 0;
-            font-size: 1.2rem;
-            opacity: 0.8;
-            font-weight: 400;
-        }
-
-        .balance-amount {
-            font-size: 2.2rem;
-            margin: 10px 0 0 0;
-            font-weight: 700;
-        }
-
-        .form-group {
+        h2 { text-align: center; margin: 0 0 15px 0; font-size: 22px; color: #1a252f; }
+        
+        /* Month Navigation Bar */
+        .month-bar {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            -webkit-overflow-scrolling: touch;
         }
-
-        input, select, button {
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 1rem;
-            outline: none;
-        }
-
-        input[type="text"] {
-            flex: 2;
-            min-width: 130px;
-        }
-
-        input[type="number"] {
-            flex: 1;
-            min-width: 80px;
-        }
-
-        select {
-            background-color: white;
+        .month-tab {
+            padding: 8px 16px;
+            background-color: #e2e8f0;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
             cursor: pointer;
+            white-space: nowrap;
+        }
+        .month-tab.active {
+            background-color: #3498db;
+            color: white;
         }
 
-        button {
-            background-color: var(--primary);
+        .balance-box {
+            background: linear-gradient(135deg, #2c3e50, #1a252f);
+            color: white;
+            padding: 18px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .balance-label { font-size: 13px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .balance-val { font-size: 30px; margin-top: 5px; font-weight: bold; }
+
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #7f8c8d; }
+        
+        .field {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dcdde1;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: #fafbfc;
+            color: #2c3e50;
+            -webkit-appearance: none;
+        }
+        .field:focus { border-color: #3498db; outline: none; background-color: #fff; }
+
+        .row-split { display: flex; gap: 10px; }
+        .row-split > div { flex: 1; }
+
+        .action-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: #2ecc71;
             color: white;
             border: none;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-            width: 100%;
+            margin-top: 5px;
+            -webkit-appearance: none;
         }
 
-        button:hover {
-            opacity: 0.9;
+        .history-header {
+            font-size: 14px;
+            font-weight: bold;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin: 25px 0 10px 0;
+            border-bottom: 2px solid #f0f3f5;
+            padding-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
         }
-
-        .transaction-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .transaction-item {
+        
+        .log-container { max-height: 260px; overflow-y: auto; padding-right: 2px; }
+        
+        .log-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 10px;
-            border-bottom: 1px solid #eee;
-            animation: fadeIn 0.3s ease;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f2f6;
         }
+        .log-details { display: flex; flex-direction: column; }
+        .log-name { font-weight: 600; font-size: 15px; }
+        .log-date { font-size: 11px; color: #a4b0be; margin-top: 2px; }
+        
+        .log-amount-box { display: flex; align-items: center; gap: 12px; }
+        .amt-tag { font-weight: 700; font-size: 15px; }
+        .green { color: #2ecc71; }
+        .red { color: #e74c3c; }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .transaction-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .transaction-desc {
-            font-weight: 500;
-        }
-
-        .transaction-date {
-            font-size: 0.75rem;
-            color: #888;
-            margin-top: 4px;
-        }
-
-        .transaction-amount {
+        .del-link {
+            color: #e74c3c;
+            text-decoration: none;
+            font-size: 12px;
+            background: #fff0f0;
+            padding: 4px 8px;
+            border-radius: 4px;
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 15px;
         }
-
-        .amt-in { color: var(--income); }
-        .amt-out { color: var(--expense); }
-
-        .delete-btn {
-            background: none;
-            border: none;
-            color: #aaa;
-            cursor: pointer;
-            font-size: 1.2rem;
-            padding: 0 5px;
-            width: auto;
-        }
-
-        .delete-btn:hover {
-            color: var(--expense);
-        }
-
-        .empty-state {
-            text-align: center;
-            color: #aaa;
-            padding: 20px;
-        }
+        .no-data { text-align: center; color: #b2bec3; padding: 30px 0; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Fund Tracker</h1>
+    <div class="app-card">
+        <h2>Fund Tracker</h2>
         
-        <div class="balance-card">
-            <h2>Current Balance</h2>
-            <div class="balance-amount" id="balance">₹0.00</div>
+        <div class="month-bar" id="month-tabs-container">
+            </div>
+        
+        <div class="balance-box">
+            <div class="balance-label"><span id="balance-month-label">This Month's</span> Net Balance</div>
+            <div class="balance-val" id="total-val">₹0.00</div>
         </div>
 
-        <form id="transaction-form">
-            <div class="form-group">
-                <input type="text" id="description" placeholder="Description (e.g., Salary, Groceries)" required>
-                <input type="number" id="amount" placeholder="Amount" step="0.01" min="0.01" required>
-                <select id="type">
-                    <option value="in">In (Income)</option>
+        <div class="input-group">
+            <label>Item Description</label>
+            <input type="text" id="tx-desc" class="field" placeholder="e.g., Office Rent" autocomplete="off">
+        </div>
+
+        <div class="row-split">
+            <div class="input-group">
+                <label>Amount (₹)</label>
+                <input type="number" id="tx-amount" class="field" placeholder="0.00" inputmode="decimal">
+            </div>
+            <div class="input-group">
+                <label>Type</label>
+                <select id="tx-type" class="field">
                     <option value="out">Out (Expense)</option>
+                    <option value="in">In (Income)</option>
                 </select>
             </div>
-            <button type="submit">Add Transaction</button>
-        </form>
+        </div>
 
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0;">
+        <button type="button" class="action-btn" onclick="executeAdd()">Log Transaction</button>
 
-        <ul class="transaction-list" id="transaction-list">
-            </ul>
+        <div class="history-header">
+            <span>Activity Logs</span>
+            <span id="header-month-tag" style="color: #3498db; text-transform: none;"></span>
+        </div>
+        <div class="log-container" id="ledger-box"></div>
     </div>
 
     <script>
-        // App State
-        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        // Set list configurations
+        var monthsArray = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        
+        // Track the current calendar context state
+        var currentYear = new Date().getFullYear(); 
+        var selectedMonthIndex = new Date().getMonth(); // Defaults to current active month
+        
+        var ledgerData = [];
 
-        // DOM Elements
-        const balanceEl = document.getElementById('balance');
-        const listEl = document.getElementById('transaction-list');
-        const form = document.getElementById('transaction-form');
-        const descInput = document.getElementById('description');
-        const amountInput = document.getElementById('amount');
-        const typeInput = document.getElementById('type');
+        // Try reading from LocalStorage with fallback setup
+        try {
+            var cache = localStorage.getItem('fudget_month_ledger');
+            if (cache) { ledgerData = JSON.parse(cache); }
+        } catch(err) {}
 
-        // Update UI Summary Metrics
-        function updateDOM() {
-            listEl.innerHTML = '';
+        // Generate the horizontal scroll bar structure dynamically
+        function renderMonthTabs() {
+            var container = document.getElementById('month-tabs-container');
+            container.innerHTML = '';
+            
+            for (var i = 0; i < monthsArray.length; i++) {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'month-tab' + (i === selectedMonthIndex ? ' active' : '');
+                btn.innerText = monthsArray[i] + ' ' + currentYear;
+                
+                // Use clojure tracking scope assignment variables
+                (function(index) {
+                    btn.onclick = function() {
+                        selectedMonthIndex = index;
+                        renderMonthTabs();
+                        refreshLedgerUI();
+                    };
+                })(i);
+                
+                container.appendChild(btn);
+            }
+            
+            // Sync metadata titles
+            document.getElementById('balance-month-label').innerText = monthsArray[selectedMonthIndex];
+            document.getElementById('header-month-tag').innerText = monthsArray[selectedMonthIndex] + ' ' + currentYear;
+        }
 
-            if (transactions.length === 0) {
-                listEl.innerHTML = '<li class="empty-state">No transactions yet. Add your first log above!</li>';
-                balanceEl.innerText = '₹0.00';
-                balanceEl.style.color = '#fff';
+        function refreshLedgerUI() {
+            var container = document.getElementById('ledger-box');
+            var totalDisplay = document.getElementById('total-val');
+            
+            container.innerHTML = '';
+            var runningTotal = 0;
+            var itemsRenderedCount = 0;
+
+            for (var i = 0; i < ledgerData.length; i++) {
+                var entry = ledgerData[i];
+                
+                // FILTER CHECK: Only evaluate if data matches the actively selected year and month
+                if (entry.month === selectedMonthIndex && entry.year === currentYear) {
+                    itemsRenderedCount++;
+                    var itemAmt = parseFloat(entry.amount);
+
+                    if (entry.type === 'in') {
+                        runningTotal += itemAmt;
+                    } else {
+                        runningTotal -= itemAmt;
+                    }
+
+                    var itemDiv = document.createElement('div');
+                    itemDiv.className = 'log-item';
+
+                    var prefix = entry.type === 'in' ? '+' : '-';
+                    var colorClass = entry.type === 'in' ? 'green' : 'red';
+
+                    itemDiv.innerHTML = '<div class="log-details">' +
+                                            '<span class="log-name">' + entry.desc + '</span>' +
+                                            '<span class="log-date">' + entry.dateStr + '</span>' +
+                                        '</div>' +
+                                        '<div class="log-amount-box">' +
+                                            '<span class="amt-tag ' + colorClass + '">' + prefix + '₹' + itemAmt.toFixed(2) + '</span>' +
+                                            '<a href="#" class="del-link" onclick="executeDelete(' + entry.id + '); return false;">Remove</a>' +
+                                        '</div>';
+
+                    container.appendChild(itemDiv);
+                }
+            }
+
+            if (itemsRenderedCount === 0) {
+                container.innerHTML = '<div class="no-data">No data recorded for ' + monthsArray[selectedMonthIndex] + '.</div>';
+            }
+
+            // Render absolute net math summaries cleanly
+            if (runningTotal >= 0) {
+                totalDisplay.innerText = '₹' + runningTotal.toFixed(2);
+            } else {
+                totalDisplay.innerText = '-₹' + Math.abs(runningTotal).toFixed(2);
+            }
+        }
+
+        function executeAdd() {
+            var dInput = document.getElementById('tx-desc');
+            var aInput = document.getElementById('tx-amount');
+            var tInput = document.getElementById('tx-type');
+
+            var dVal = dInput.value.trim();
+            var aVal = parseFloat(aInput.value);
+
+            if (!dVal || isNaN(aVal) || aVal <= 0) {
+                alert('Please fill out a descriptive label title and valid positive numbers.');
                 return;
             }
 
-            let totalBalance = 0;
+            var now = new Date();
+            var timeString = now.toLocaleDateString(undefined, {month: 'short', day: 'numeric'}) + ', ' + 
+                             now.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'});
 
-            transactions.forEach(t => {
-                const isIncome = t.type === 'in';
-                totalBalance += isIncome ? t.amount : -t.amount;
-
-                const li = document.createElement('li');
-                li.className = 'transaction-item';
-                li.innerHTML = `
-                    <div class="transaction-info">
-                        <span class="transaction-desc">${t.description}</span>
-                        <span class="transaction-date">${t.date}</span>
-                    </div>
-                    <div class="transaction-amount ${isIncome ? 'amt-in' : 'amt-out'}">
-                        ${isIncome ? '+' : '-'}${formatCurrency(t.amount)}
-                        <button class="delete-btn" onclick="deleteTransaction('${t.id}')">&times;</button>
-                    </div>
-                `;
-                listEl.appendChild(li);
-            });
-
-            balanceEl.innerText = (totalBalance >= 0 ? '' : '-') + formatCurrency(Math.abs(totalBalance));
-        }
-
-        // Helper: Format number cleanly
-        function formatCurrency(num) {
-            return '₹' + num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
-        }
-
-        // Action: Add entry
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const transaction = {
-                id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9),
-                description: descInput.value.trim(),
-                amount: parseFloat(amountInput.value),
-                type: typeInput.value,
-                date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            var uniqueRecord = {
+                id: Date.now(),
+                desc: dVal,
+                amount: aVal,
+                type: tInput.value,
+                dateStr: timeString,
+                month: selectedMonthIndex, // Linked directly to the chosen active tab month
+                year: currentYear
             };
 
-            transactions.unshift(transaction); // Add to beginning of array
-            saveAndRefresh();
-            
-            // Reset input values cleanly
-            descInput.value = '';
-            amountInput.value = '';
-            descInput.focus();
-        });
+            ledgerData.unshift(uniqueRecord);
+            syncStorage();
 
-        // Action: Remove entry
-        function deleteTransaction(id) {
-            transactions = transactions.filter(t => t.id !== id);
-            saveAndRefresh();
+            dInput.value = '';
+            aInput.value = '';
         }
 
-        // Persistence Syncing
-        function saveAndRefresh() {
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-            updateDOM();
+        function executeDelete(targetId) {
+            var filtered = [];
+            for (var i = 0; i < ledgerData.length; i++) {
+                if (ledgerData[i].id !== targetId) {
+                    filtered.push(ledgerData[i]);
+                }
+            }
+            ledgerData = filtered;
+            syncStorage();
         }
 
-        // Initial Layout Initialization
-        updateDOM();
+        function syncStorage() {
+            try {
+                localStorage.setItem('fudget_month_ledger', JSON.stringify(ledgerData));
+            } catch(e) {}
+            refreshLedgerUI();
+        }
+
+        // Initialize view containers right away
+        renderMonthTabs();
+        refreshLedgerUI();
     </script>
 </body>
 </html>
